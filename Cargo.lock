@@ -808,7 +808,7 @@ dependencies = [
  "desub-legacy",
  "frame-metadata",
  "parity-scale-codec",
- "serde_json",
+ "serde",
  "thiserror",
 ]
 
