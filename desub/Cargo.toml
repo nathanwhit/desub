@@ -18,9 +18,16 @@ desub-current = { version = "0.1.0", path = "../desub-current/" }
 desub-json-resolver = { version = "0.0.1", path = "../desub-json-resolver/", optional = true }
 
 thiserror = "1.0.30"
-frame-metadata = "14.2"
-codec = { version = "2.3.1", package = "parity-scale-codec" }
-serde_json = { version = "1.0", features = ["preserve_order", "arbitrary_precision"] }
+frame-metadata = "15.0"
+codec = { version = "3.1.0", package = "parity-scale-codec" }
+serde_json = { version = "1.0", features = [
+    "preserve_order",
+    "arbitrary_precision",
+] }
 
 [features]
-polkadot-js = ["desub-json-resolver", "desub-json-resolver/polkadot", "frame-metadata/legacy" ]
+polkadot-js = [
+    "desub-json-resolver",
+    "desub-json-resolver/polkadot",
+    "frame-metadata/legacy",
+]
