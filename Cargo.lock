@@ -806,7 +806,7 @@ dependencies = [
  "desub-current",
  "desub-json-resolver",
  "desub-legacy",
- "frame-metadata",
+ "frame-metadata 15.0.0 (git+https://github.com/nathanwhit/frame-metadata?branch=insipx-aj-docs-rebase)",
  "parity-scale-codec",
  "serde",
  "thiserror",
@@ -828,7 +828,7 @@ dependencies = [
  "bitvec",
  "derive_more",
  "desub-common",
- "frame-metadata",
+ "frame-metadata 15.0.0 (git+https://github.com/nathanwhit/frame-metadata?branch=insipx-aj-docs-rebase)",
  "hex",
  "log",
  "parity-scale-codec",
@@ -863,7 +863,7 @@ dependencies = [
  "derive_more",
  "desub-common",
  "dyn-clone",
- "frame-metadata",
+ "frame-metadata 15.0.0 (git+https://github.com/nathanwhit/frame-metadata?branch=insipx-aj-docs-rebase)",
  "hex",
  "log",
  "onig",
@@ -1123,12 +1123,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "frame-metadata"
+version = "15.0.0"
+source = "git+https://github.com/nathanwhit/frame-metadata?branch=insipx-aj-docs-rebase#7ca7d9dfaecbfe464cf6295c6a69a0b831ceb7e1"
+dependencies = [
+ "cfg-if",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+]
+
+[[package]]
 name = "frame-support"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=master#666f39b8a22108f57732215de006518738034ba2"
 dependencies = [
  "bitflags",
- "frame-metadata",
+ "frame-metadata 15.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "frame-support-procedural",
  "impl-trait-for-tuples",
  "log",

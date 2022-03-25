@@ -21,7 +21,9 @@ derive_more = "0.99.3"
 dyn-clone = "1.0"
 hex = "0.4"
 bitvec = { version = "1.0", features = ["serde", "alloc"] }
-frame-metadata = { version = "15.0", features = ["legacy"] }
+frame-metadata = { git = "https://github.com/nathanwhit/frame-metadata", branch = "insipx-aj-docs-rebase", features = [
+    "legacy",
+] }
 
 desub-common = { version = "0.1.0", path = "../desub-common/" }
 

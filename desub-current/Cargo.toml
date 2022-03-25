@@ -13,7 +13,12 @@ edition = "2021"
 [dependencies]
 log = "0.4"
 thiserror = "1.0.30"
-frame-metadata = { version = "15.0", features = ["v14", "std", "scale-info"] }
+frame-metadata = { git = "https://github.com/nathanwhit/frame-metadata", branch = "insipx-aj-docs-rebase", features = [
+    "v14",
+    "std",
+    "scale-info",
+] }
+
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 codec = { version = "3.1", package = "parity-scale-codec", features = [
