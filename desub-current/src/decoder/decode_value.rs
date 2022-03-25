@@ -454,8 +454,8 @@ mod test {
 		use bitvec::{bitvec, order::Lsb0};
 
 		encode_decode_check(
-			bitvec![Lsb0, u8; 0, 1, 1, 0, 1, 0],
-			Value::bit_sequence(bitvec![Lsb0, u8; 0, 1, 1, 0, 1, 0]),
+			bitvec![u8, Lsb0; 0, 1, 1, 0, 1, 0],
+			Value::bit_sequence(bitvec![u8, Lsb0; 0, 1, 1, 0, 1, 0]),
 		);
 	}
 }
