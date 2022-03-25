@@ -15,7 +15,6 @@
 // along with substrate-desub.  If not, see <http://www.gnu.org/licenses/>.
 
 use super::{BitSequence, Composite, Primitive, Value, ValueDef, Variant};
-use log_derive::logfn;
 use serde::{
 	de::{self, value::BorrowedStrDeserializer, EnumAccess, IntoDeserializer, SeqAccess, VariantAccess},
 	forward_to_deserialize_any, ser, Deserialize, Deserializer, Serialize, Serializer,
