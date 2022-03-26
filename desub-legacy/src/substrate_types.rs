@@ -25,7 +25,7 @@ mod remote;
 use self::remote::*;
 use crate::{Error, SetField};
 use bitvec::order::Lsb0 as BitOrderLsb0;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sp_core::crypto::{AccountId32, Ss58Codec};
 use sp_runtime::MultiAddress;
 use std::{convert::TryFrom, fmt};
@@ -118,7 +118,7 @@ pub mod pallet_democracy {
 /// A 'stateful' version of [RustTypeMarker](enum.RustTypeMarker.html).
 /// 'Std' variant is not here like in RustTypeMarker.
 /// Instead common types are just apart of the enum
-#[derive(Debug, PartialEq, Clone, Serialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum SubstrateType {
 	/// 512-bit hash type
@@ -276,7 +276,7 @@ impl fmt::Display for SubstrateType {
 	}
 }
 
-#[derive(Debug, PartialEq, Clone, Serialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct EnumField {
 	/// name of the field.
 	pub name: String,
@@ -297,7 +297,7 @@ impl fmt::Display for EnumField {
 }
 
 /// Type with an associated name
-#[derive(Debug, PartialEq, Clone, Serialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct StructField {
 	/// name of a field, if any
 	/// this is an option, because IE a Tuple-enum Variant
