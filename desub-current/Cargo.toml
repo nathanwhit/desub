@@ -30,11 +30,11 @@ scale-info = { version = "2.0.0", features = ["bit-vec", "derive"] }
 bitvec = { version = "1.0", features = ["serde", "alloc"] }
 desub-common = { version = "0.1.0", path = "../desub-common" }
 
-sp-core = { git = "https://github.com/paritytech/substrate", branch = "master" }
-sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "master" }
+sp-core = { git = "https://github.com/nathanwhit/substrate", branch = "creditcoin" }
+sp-runtime = { git = "https://github.com/nathanwhit/substrate", branch = "creditcoin" }
 
 [dev-dependencies]
 serde_json = "1"
-sp-keyring = { git = "https://github.com/paritytech/substrate", branch = "master" }
+sp-keyring = { git = "https://github.com/nathanwhit/substrate", branch = "creditcoin" }
 
 [features]
