@@ -71,7 +71,7 @@ impl StorageDecoder {
 		&self,
 		metadata: &'m Metadata,
 		key_bytes: &mut &'b [u8],
-		value_bytes: &mut &'b [u8],
+		value_bytes: Option<&mut &'b [u8]>,
 	) -> Result<StorageEntry<'m, 'b>, StorageDecodeError> {
 		// Step 1: reverse-lookup the hashed prefix+name part of the key, and get
 		// details about this storage location from our metadata.
@@ -87,8 +87,14 @@ impl StorageDecoder {
 			FrameStorageEntryType::Plain(ty) => {
 				// No more work to do here; our storage entry is a plain prefix+name entry,
 				// so return the details of it:
-				let value = super::decode_value_by_id(metadata, ty, value_bytes)
-					.map_err(StorageDecodeError::CouldNotDecodeStorageValue)?;
+				let value = if let Some(bytes) = value_bytes {
+					Some(
+						super::decode_value_by_id(metadata, ty, bytes)
+							.map_err(StorageDecodeError::CouldNotDecodeStorageValue)?,
+					)
+				} else {
+					None
+				};
 				Ok(StorageEntry {
 					prefix: prefix_str.into(),
 					name: name_str.into(),
@@ -157,8 +163,14 @@ impl StorageDecoder {
 					storage_keys.push(StorageMapKey { bytes: Cow::Borrowed(hash_bytes), hasher, ty });
 				}
 
-				let value = super::decode_value_by_id(metadata, ty, value_bytes)
-					.map_err(StorageDecodeError::CouldNotDecodeStorageValue)?;
+				let value = if let Some(bytes) = value_bytes {
+					Some(
+						super::decode_value_by_id(metadata, ty, bytes)
+							.map_err(StorageDecodeError::CouldNotDecodeStorageValue)?,
+					)
+				} else {
+					None
+				};
 
 				Ok(StorageEntry {
 					prefix: prefix_str.into(),
@@ -234,6 +246,13 @@ impl<'m, 'b> StorageEntry<'m, 'b> {
 			details: self.details.into_owned(),
 		}
 	}
+
+	pub fn value(&self) -> Option<&Value<TypeId>> {
+		match &self.details {
+			StorageEntryType::Plain(value) => value.as_ref(),
+			StorageEntryType::Map { value, .. } => value.as_ref(),
+		}
+	}
 }
 
 /// This is similar to [`frame_metadata::v14::StorageEntryType`], but also includes
@@ -241,8 +260,8 @@ impl<'m, 'b> StorageEntry<'m, 'b> {
 /// [`StorageEntry`] struct.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum StorageEntryType<'b> {
-	Plain(Value<TypeId>),
-	Map { keys: Vec<StorageMapKey<'b>>, value: Value<TypeId> },
+	Plain(Option<Value<TypeId>>),
+	Map { keys: Vec<StorageMapKey<'b>>, value: Option<Value<TypeId>> },
 }
 
 impl<'b> StorageEntryType<'b> {

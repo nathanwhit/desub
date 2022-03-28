@@ -136,12 +136,12 @@ impl Decoder {
 		&self,
 		version: SpecVersion,
 		mut key_data: &'b [u8],
-		mut value_data: &'b [u8],
+		mut value_data: Option<&'b [u8]>,
 	) -> Result<LegacyOrCurrentStorage, Error> {
 		if self.current_metadata.contains_key(&version) {
 			let DsubMetadataAndDecoder { metadata, storage_decoder } =
 				self.current_metadata.get(&version).expect("Checked if key is contained; qed");
-			match storage_decoder.decode_entry(metadata, &mut key_data, &mut value_data) {
+			match storage_decoder.decode_entry(metadata, &mut key_data, value_data.as_mut()) {
 				Ok(v) => Ok(LegacyOrCurrentStorage::Current(v.into_owned())),
 				Err(e) => Err(Error::V14 { source: e.into(), ext: None }),
 			}
@@ -149,7 +149,7 @@ impl Decoder {
 			if !self.legacy_decoder.has_version(&version) {
 				return Err(Error::SpecVersionNotFound(version));
 			}
-			let storage = self.legacy_decoder.decode_storage(version, (key_data, Some(value_data)))?;
+			let storage = self.legacy_decoder.decode_storage(version, (key_data, value_data))?;
 			Ok(LegacyOrCurrentStorage::Legacy(storage))
 		}
 	}

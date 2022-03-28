@@ -106,7 +106,7 @@ pub fn decode_value_by_id<'a, Id: Into<TypeId>>(
 /// let storage_key_cursor = &mut &*storage_key_bytes;
 ///
 /// // Now, decode our storage key into something meaningful:
-/// let entry = storage_decoder.decode_key(&metadata, storage_key_cursor).expect("can decode storage");
+/// let entry = storage_decoder.decode_entry(&metadata, storage_key_cursor, None).expect("can decode storage");
 /// assert!(storage_key_cursor.is_empty(), "No more bytes expected");
 /// assert_eq!(entry.prefix, "System");
 /// assert_eq!(entry.name, "BlockHash");

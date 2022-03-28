@@ -60,7 +60,7 @@ fn timestamp_now() {
 	bytes!(storage_key = "0xf0c365c3cf59d671eb72da0e7a4113c49f1f0515f462cdcf84e0f1d6045dfcbb");
 	let storage_value = 123u64.encode();
 
-	let entry = storage.decode_entry(&meta, storage_key, &mut &*storage_value).expect("can decode storage");
+	let entry = storage.decode_entry(&meta, storage_key, Some(&mut &*storage_value)).expect("can decode storage");
 	assert!(storage_key.is_empty(), "No more bytes expected");
 	assert_eq!(entry.prefix, "Timestamp");
 	assert_eq!(entry.name, "Now");
@@ -80,7 +80,7 @@ fn democracy_blacklist() {
 	// Democracy.Blacklist([1u8; 32]: H256): ..
 	bytes!(storage_key = "0xf2794c22e353e9a839f12faab03a911bb7612c99e31defd01cd5a28e9967e2080101010101010101010101010101010101010101010101010101010101010101");
 
-	let entry = storage.decode_key(&meta, storage_key).expect("can decode storage");
+	let entry = storage.decode_entry(&meta, storage_key, None).expect("can decode storage");
 	assert!(storage_key.is_empty(), "No more bytes expected");
 	assert_eq!(entry.prefix, "Democracy");
 	assert_eq!(entry.name, "Blacklist");
@@ -105,8 +105,9 @@ fn system_blockhash() {
 
 	// System.BlockHash(1000): [u8; 32]
 	bytes!(storage_key = "0x26aa394eea5630e07c48ae0c9558cef7a44704b568d21667356a5a050c118746b6ff6f7d467b87a9e8030000");
+	let storage_value = [1u8; 32].encode();
 
-	let entry = storage.decode_key(&meta, storage_key).expect("can decode storage");
+	let entry = storage.decode_entry(&meta, storage_key, Some(&mut &*storage_value)).expect("can decode storage");
 	assert!(storage_key.is_empty(), "No more bytes expected");
 	assert_eq!(entry.prefix, "System");
 	assert_eq!(entry.name, "BlockHash");
@@ -118,10 +119,8 @@ fn system_blockhash() {
 	assert_hasher_eq!(keys[0].hasher, StorageHasher::Twox64Concat, Value::u32(1000));
 
 	// We can decode values at this location:
-	let bytes = [1u8; 32].encode();
-	let val = decoder::decode_value_by_id(&meta, &entry.ty, &mut &*bytes).unwrap();
 	assert_eq!(
-		val.without_context(),
+		entry.value().unwrap().clone().without_context(),
 		// The Type appears to take the form of a newtype-wrapped [u8; 32]:
 		Value::unnamed_composite(vec![Value::unnamed_composite(vec![Value::u8(1); 32])])
 	);
@@ -136,7 +135,7 @@ fn balances_account() {
 	// Balances.Account(BOB: AccountId32): PalletBalancesAccountData
 	bytes!(storage_key = "0xc2261276cc9d1f8598ea4b6a74b15c2fb99d880ec681799c0cf30e8886371da94f9aea1afa791265fae359272badc1cf8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48");
 
-	let entry = storage.decode_key(&meta, storage_key).expect("can decode storage");
+	let entry = storage.decode_entry(&meta, storage_key, None).expect("can decode storage");
 	assert!(storage_key.is_empty(), "No more bytes expected");
 	assert_eq!(entry.prefix, "Balances");
 	assert_eq!(entry.name, "Account");
@@ -158,8 +157,9 @@ fn imonline_authoredblocks() {
 
 	// ImOnline.AuthoredBlocks(1234: u32, BOB:AccountId32): u32
 	bytes!(storage_key = "0x2b06af9719ac64d755623cda8ddd9b94b1c371ded9e9c565e89ba783c4d5f5f9548491cbfe725727d2040000a647e755c30521d38eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48");
+	let storage_value = 5678u32.encode();
 
-	let entry = storage.decode_key(&meta, storage_key).expect("can decode storage");
+	let entry = storage.decode_entry(&meta, storage_key, Some(&mut &*storage_value)).expect("can decode storage");
 	assert!(storage_key.is_empty(), "No more bytes expected");
 	assert_eq!(entry.prefix, "ImOnline");
 	assert_eq!(entry.name, "AuthoredBlocks");
