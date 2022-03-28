@@ -27,7 +27,7 @@ pub enum Error {
 	V14 {
 		#[source]
 		source: DecodeError,
-		ext: Vec<Extrinsic<'static>>,
+		ext: Option<Vec<Extrinsic<'static>>>,
 	},
 	#[error(transparent)]
 	Legacy(#[from] LegacyError),

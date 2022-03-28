@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with substrate-desub.  If not, see <http://www.gnu.org/licenses/>.
 
-use desub_current::decoder::Extrinsic;
-use desub_legacy::decoder::GenericExtrinsic;
+use desub_current::decoder::{Extrinsic, StorageEntry};
+use desub_legacy::decoder::{GenericExtrinsic, GenericStorage};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
@@ -24,3 +24,5 @@ pub enum LegacyOrCurrent<L, C> {
 }
 
 pub type LegacyOrCurrentExtrinsic = LegacyOrCurrent<GenericExtrinsic, Extrinsic<'static>>;
+
+pub type LegacyOrCurrentStorage = LegacyOrCurrent<GenericStorage, StorageEntry<'static, 'static>>;

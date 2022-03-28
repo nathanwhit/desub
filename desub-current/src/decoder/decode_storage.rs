@@ -33,6 +33,8 @@ pub enum StorageDecodeError {
 		hasher: frame_metadata::v14::StorageHasher,
 		decode_error: super::DecodeValueError,
 	},
+	#[error("Couldn't decode the value in the storage entry: {0}")]
+	CouldNotDecodeStorageValue(super::DecodeValueError),
 	#[error("Couldn't find a storage entry corresponding to the prefix hash provided in the data")]
 	PrefixNotFound,
 	#[error("Couldn't find a storage entry corresponding to the name hash provided in the data")]
@@ -62,17 +64,18 @@ impl StorageDecoder {
 		StorageDecoder { entries_by_hashed_prefix }
 	}
 
-	/// Decode the SCALE encoded bytes representing a storage entry lookup. These conceptually take the
+	/// Decode the SCALE encoded bytes representing a storage entry lookup and value. These conceptually take the
 	/// form `twox_128(prefix) + twox_128(name) + rest`, where `rest` depends on the storage entry we're
 	/// keying into, and may be nothing at all for plain storage locations, or hashed keys to access maps.
-	pub fn decode_key<'m, 'b>(
+	pub fn decode_entry<'m, 'b>(
 		&self,
 		metadata: &'m Metadata,
-		bytes: &mut &'b [u8],
+		key_bytes: &mut &'b [u8],
+		value_bytes: &mut &'b [u8],
 	) -> Result<StorageEntry<'m, 'b>, StorageDecodeError> {
 		// Step 1: reverse-lookup the hashed prefix+name part of the key, and get
 		// details about this storage location from our metadata.
-		let location = self.decode_prefix_and_name_to_location(bytes)?;
+		let location = self.decode_prefix_and_name_to_location(key_bytes)?;
 		let storage_entry = metadata.storage_entry(location);
 
 		let prefix_str = storage_entry.prefix;
@@ -84,14 +87,16 @@ impl StorageDecoder {
 			FrameStorageEntryType::Plain(ty) => {
 				// No more work to do here; our storage entry is a plain prefix+name entry,
 				// so return the details of it:
+				let value = super::decode_value_by_id(metadata, ty, value_bytes)
+					.map_err(StorageDecodeError::CouldNotDecodeStorageValue)?;
 				Ok(StorageEntry {
 					prefix: prefix_str.into(),
 					name: name_str.into(),
 					ty: ty.into(),
-					details: StorageEntryType::Plain,
+					details: StorageEntryType::Plain(value),
 				})
 			}
-			FrameStorageEntryType::Map { hashers, key, value } => {
+			FrameStorageEntryType::Map { hashers, key, value: ty } => {
 				// We'll consume some more data based on the hashers.
 				// First, get the type information that we need ready.
 				let keys = storage_map_key_to_type_id_vec(metadata, key);
@@ -131,7 +136,7 @@ impl StorageDecoder {
 						// Don't consume our `bytes` here; create a new cursor to consume and count the length
 						// of the value in bytes, and then we can return this and tweak the input bytes cursor
 						// in one place below.
-						let value_bytes = &mut &bytes[initial_hash_bytes..];
+						let value_bytes = &mut &key_bytes[initial_hash_bytes..];
 						let start_len = value_bytes.len();
 						let value = super::decode_value_by_id(metadata, ty, value_bytes).map_err(|e| {
 							StorageDecodeError::CouldNotDecodeHasherValue {
@@ -147,16 +152,19 @@ impl StorageDecoder {
 					};
 
 					// Move the byte cursor forwards and push an entry to our storage keys:
-					let hash_bytes = &bytes[..bytes_consumed];
-					*bytes = &bytes[bytes_consumed..];
+					let hash_bytes = &key_bytes[..bytes_consumed];
+					*key_bytes = &key_bytes[bytes_consumed..];
 					storage_keys.push(StorageMapKey { bytes: Cow::Borrowed(hash_bytes), hasher, ty });
 				}
+
+				let value = super::decode_value_by_id(metadata, ty, value_bytes)
+					.map_err(StorageDecodeError::CouldNotDecodeStorageValue)?;
 
 				Ok(StorageEntry {
 					prefix: prefix_str.into(),
 					name: name_str.into(),
-					ty: value.into(),
-					details: StorageEntryType::Map(storage_keys),
+					ty: ty.into(),
+					details: StorageEntryType::Map { keys: storage_keys, value },
 				})
 			}
 		}
@@ -203,7 +211,7 @@ fn storage_map_key_to_type_id_vec(metadata: &Metadata, key: &ScaleInfoTypeId) ->
 	}
 }
 
-/// Details about the decoded storage key.
+/// Details about the decoded storage entry.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct StorageEntry<'m, 'b> {
 	/// The prefix (often identical to the pallet name) that the storage lives under
@@ -233,15 +241,17 @@ impl<'m, 'b> StorageEntry<'m, 'b> {
 /// [`StorageEntry`] struct.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum StorageEntryType<'b> {
-	Plain,
-	Map(Vec<StorageMapKey<'b>>),
+	Plain(Value<TypeId>),
+	Map { keys: Vec<StorageMapKey<'b>>, value: Value<TypeId> },
 }
 
 impl<'b> StorageEntryType<'b> {
 	pub fn into_owned(self) -> StorageEntryType<'static> {
 		match self {
-			Self::Plain => StorageEntryType::Plain,
-			Self::Map(keys) => StorageEntryType::Map(keys.into_iter().map(|k| k.into_owned()).collect()),
+			Self::Plain(value) => StorageEntryType::Plain(value),
+			Self::Map { keys, value } => {
+				StorageEntryType::Map { keys: keys.into_iter().map(|k| k.into_owned()).collect(), value }
+			}
 		}
 	}
 	/// Return the map keys associated with this storage entry, or
@@ -249,8 +259,8 @@ impl<'b> StorageEntryType<'b> {
 	/// storage entry).
 	pub fn map_keys(&self) -> &[StorageMapKey<'b>] {
 		match self {
-			Self::Plain => &[],
-			Self::Map(keys) => keys,
+			Self::Plain(_) => &[],
+			Self::Map { keys, .. } => keys,
 		}
 	}
 }

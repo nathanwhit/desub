@@ -27,7 +27,9 @@ fn metadata() -> Metadata {
 }
 
 fn account_id_to_value<A: AsRef<[u8]>>(account_id_bytes: A) -> Value<()> {
-	Value::unnamed_composite(vec![Value::unnamed_composite(account_id_bytes.as_ref().iter().map(|&b| Value::u8(b)).collect())])
+	Value::unnamed_composite(vec![Value::unnamed_composite(
+		account_id_bytes.as_ref().iter().map(|&b| Value::u8(b)).collect(),
+	)])
 }
 
 macro_rules! assert_hasher_eq {
@@ -56,8 +58,9 @@ fn timestamp_now() {
 
 	// Timestamp.Now(): u64
 	bytes!(storage_key = "0xf0c365c3cf59d671eb72da0e7a4113c49f1f0515f462cdcf84e0f1d6045dfcbb");
+	let storage_value = 123u64.encode();
 
-	let entry = storage.decode_key(&meta, storage_key).expect("can decode storage");
+	let entry = storage.decode_entry(&meta, storage_key, &mut &*storage_value).expect("can decode storage");
 	assert!(storage_key.is_empty(), "No more bytes expected");
 	assert_eq!(entry.prefix, "Timestamp");
 	assert_eq!(entry.name, "Now");

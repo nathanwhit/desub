@@ -49,6 +49,8 @@ pub use decode_storage::{
 pub enum DecodeError {
 	#[error("Failed to parse the provided vector of extrinsics: {0}")]
 	UnexpectedExtrinsicsShape(#[from] ExtrinsicBytesError),
+	#[error("Failed to decode storage: {0}")]
+	DecodeStorageError(#[from] StorageDecodeError),
 	#[error("Failed to decode: {0}")]
 	CodecError(#[from] codec::Error),
 	#[error("Failed to decode type: {0}")]
