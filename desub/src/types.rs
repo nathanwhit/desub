@@ -26,3 +26,19 @@ pub enum LegacyOrCurrent<L, C> {
 pub type LegacyOrCurrentExtrinsic = LegacyOrCurrent<GenericExtrinsic, Extrinsic<'static>>;
 
 pub type LegacyOrCurrentStorage = LegacyOrCurrent<GenericStorage, StorageEntry<'static, 'static>>;
+
+impl LegacyOrCurrentStorage {
+	pub fn module(&self) -> String {
+		match self {
+			LegacyOrCurrent::Current(entry) => entry.prefix.clone().into(),
+			LegacyOrCurrent::Legacy(legacy) => legacy.key().module.clone(),
+		}
+	}
+
+	pub fn name(&self) -> String {
+		match self {
+			LegacyOrCurrent::Current(entry) => entry.name.clone().into(),
+			LegacyOrCurrent::Legacy(legacy) => legacy.key().prefix.clone(),
+		}
+	}
+}
