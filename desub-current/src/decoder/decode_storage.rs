@@ -41,6 +41,21 @@ pub enum StorageDecodeError {
 	NameNotFound,
 }
 
+fn well_known_storage<'m, 'b>(key_bytes: &mut &'b [u8]) -> Option<StorageEntry<'m, 'b>> {
+	if key_bytes.len() == 16 {
+		// FIXME: manifesting a typeid out of thin air makes me sad, we really want whatever typeid is registered to `u32`
+		if *key_bytes == ":extrinsic_index".as_bytes() {
+			return Some(StorageEntry {
+				prefix: Cow::Borrowed("WellKnown"),
+				name: Cow::Borrowed(":extrinsic_index"),
+				ty: TypeId::from_u32(u32::MAX),
+				details: StorageEntryType::Plain(None),
+			});
+		}
+	}
+	None
+}
+
 impl StorageDecoder {
 	/// Call [`super::decode_storage()`] to construct a [`StorageDecoder`].
 	pub(super) fn generate_from_metadata(metadata: &Metadata) -> StorageDecoder {
@@ -73,6 +88,10 @@ impl StorageDecoder {
 		key_bytes: &mut &'b [u8],
 		value_bytes: Option<&mut &'b [u8]>,
 	) -> Result<StorageEntry<'m, 'b>, StorageDecodeError> {
+		if let Some(entry) = well_known_storage(key_bytes) {
+			return Ok(entry);
+		}
+
 		// Step 1: reverse-lookup the hashed prefix+name part of the key, and get
 		// details about this storage location from our metadata.
 		let location = self.decode_prefix_and_name_to_location(key_bytes)?;
@@ -187,6 +206,7 @@ impl StorageDecoder {
 	// bytes.
 	fn decode_prefix_and_name_to_location(&self, data: &mut &[u8]) -> Result<StorageLocation, StorageDecodeError> {
 		if data.len() < 32 {
+			eprintln!("{:?} : {}", data, hex::encode(*data));
 			return Err(StorageDecodeError::NotEnoughBytesForPrefixAndName(data.len()));
 		}
 		let prefix_hash = &data[..16];
